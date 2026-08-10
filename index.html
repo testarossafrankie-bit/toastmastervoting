@@ -16,40 +16,56 @@
     flex-direction: column;
   }
   main { flex: 1; max-width: 560px; margin: 0 auto; padding: 24px 16px; width: 100%; }
-  h1 { font-size: 26px; margin: 0 0 4px; }
+  h1 { font-size: 22px; margin: 0 0 2px; }
   h1 .live { font-size: 13px; color: #dc2626; font-weight: 500; margin-left: 8px; vertical-align: middle; }
+  .meeting-next { font-size: 13px; color: #666; margin: 0 0 6px; }
   .sub { color: #666; margin: 0 0 20px; font-size: 14px; line-height: 1.4; }
   .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 16px; }
-  .field { margin-bottom: 16px; }
-  .field:last-of-type { margin-bottom: 20px; }
-  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
-  .hint { font-size: 12px; color: #888; font-weight: normal; margin-left: 6px; }
+  .section-card {
+    background: white;
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    margin-bottom: 14px;
+  }
+  .section-card h3 { font-size: 15px; margin: 0 0 10px; color: #1a1a1a; }
+  .section-row { display: flex; gap: 8px; }
   input {
+    flex: 1;
     width: 100%;
     padding: 12px 14px;
     border: 1px solid #d0d5dc;
     border-radius: 8px;
     font-size: 16px;
     font-family: inherit;
+    min-width: 0;
   }
   input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
   button {
-    width: 100%;
-    padding: 14px;
+    padding: 12px 18px;
     background: #2563eb;
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
+    white-space: nowrap;
   }
   button:hover { background: #1d4ed8; }
   button:disabled { background: #94a3b8; cursor: not-allowed; }
+  .section-done {
+    background: #dcfce7;
+    color: #14532d;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
   .msg { padding: 12px 14px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }
   .msg-ok { background: #dcfce7; color: #14532d; }
   .msg-err { background: #fee2e2; color: #7f1d1d; }
+  .section-err { color: #7f1d1d; font-size: 13px; margin-top: 6px; }
   .tally-section { margin-bottom: 24px; }
   .tally-section:last-child { margin-bottom: 0; }
   .tally-section h2 { font-size: 17px; margin: 0 0 10px; color: #2563eb; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
@@ -65,8 +81,8 @@
   .tally-count { font-weight: 700; color: #111; font-variant-numeric: tabular-nums; }
   .spelling { font-size: 11px; color: #999; margin-left: 6px; }
   .empty { color: #999; font-style: italic; padding: 8px 0; font-size: 14px; }
-  .meta { font-size: 12px; color: #666; margin-bottom: 14px; }
-  .actions { display: flex; gap: 8px; margin-top: 16px; }
+  .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .actions button { flex: 1; min-width: 140px; }
   .btn-secondary { background: white; color: #2563eb; border: 1px solid #d0d5dc; }
   .btn-secondary:hover { background: #f9fafb; }
   .btn-danger { background: #dc2626; }
@@ -94,37 +110,44 @@
 <body>
 <main>
   <div id="voter-view">
-    <h1>Table Topics Voting</h1>
-    <p class="sub">Enter one name per category. Use <strong>first name + last initial</strong> (e.g., "Mike S") so we can tell people apart.</p>
+    <h1 id="meeting-title">Meeting Agenda</h1>
+    <div class="meeting-next" id="meeting-next"></div>
+    <p class="sub">Enter <strong>first name + last initial</strong> (e.g., "Mike S") and submit each category individually.</p>
 
-    <div id="voter-msg" class="hide"></div>
+    <div class="section-card" data-category="speaker">
+      <h3>Best Speaker</h3>
+      <div class="section-row">
+        <input placeholder="First name + last initial" autocomplete="off">
+        <button type="button">Submit</button>
+      </div>
+    </div>
 
-    <form id="vote-form" class="card">
-      <div class="field">
-        <label>Best Speaker <span class="hint">e.g., Michael S</span></label>
-        <input name="speaker" autocomplete="off" placeholder="First name + last initial">
+    <div class="section-card" data-category="evaluator">
+      <h3>Best Evaluator</h3>
+      <div class="section-row">
+        <input placeholder="First name + last initial" autocomplete="off">
+        <button type="button">Submit</button>
       </div>
-      <div class="field">
-        <label>Best Evaluator <span class="hint">e.g., Sarah D</span></label>
-        <input name="evaluator" autocomplete="off" placeholder="First name + last initial">
+    </div>
+
+    <div class="section-card" data-category="tableTopics">
+      <h3>Best Table Topics</h3>
+      <div class="section-row">
+        <input placeholder="First name + last initial" autocomplete="off">
+        <button type="button">Submit</button>
       </div>
-      <div class="field">
-        <label>Best Table Topics <span class="hint">e.g., Tony R</span></label>
-        <input name="tableTopics" autocomplete="off" placeholder="First name + last initial">
-      </div>
-      <button type="submit" id="submit-btn">Submit Vote</button>
-    </form>
+    </div>
 
     <div class="view-toggle"><a href="?view=tally">View live tally &rarr;</a></div>
   </div>
 
   <div id="tally-view" class="hide">
-    <h1>Vote Tally <span class="live"><span class="pulse"></span>LIVE</span></h1>
-    <p class="meta" id="tally-meta"></p>
+    <h1 id="tally-title">Vote Tally <span class="live"><span class="pulse"></span>LIVE</span></h1>
+    <div class="meeting-next" id="tally-next"></div>
     <div class="card" id="tally-content">Loading&hellip;</div>
     <div class="actions">
       <button class="btn-secondary" onclick="location.href='/'">&larr; Back to voting</button>
-      <button class="btn-danger" id="reset-btn">Reset for Next Meeting</button>
+      <button class="btn-danger" id="reset-btn">Clear votes for this meeting</button>
     </div>
   </div>
 </main>
@@ -132,62 +155,124 @@
 <footer>Developed by FPT &middot; &copy; 2026 F Terragrossa LLC. All Rights Reserved.</footer>
 
 <script>
+function getMeetingsInMonth(year, month) {
+  const tuesdays = [];
+  for (let day = 1; day <= 31; day++) {
+    const dt = new Date(year, month, day);
+    if (dt.getMonth() !== month) break;
+    if (dt.getDay() === 2) tuesdays.push(dt);
+  }
+  return [tuesdays[1], tuesdays[3]].filter(Boolean);
+}
+
+function getCurrentAndNextMeeting() {
+  const now = new Date();
+  const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const candidates = [];
+  for (let offset = -2; offset <= 2; offset++) {
+    const d = new Date(today0.getFullYear(), today0.getMonth() + offset, 1);
+    candidates.push(...getMeetingsInMonth(d.getFullYear(), d.getMonth()));
+  }
+  candidates.sort((a, b) => a - b);
+
+  let current = null, minDist = Infinity;
+  for (const c of candidates) {
+    const dist = Math.abs(c - today0);
+    if (dist < minDist) { minDist = dist; current = c; }
+  }
+  const anchor = current || today0;
+  const next = candidates.find(c => c > anchor) || null;
+  return { current, next };
+}
+
+function meetingKeyFor(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+  });
+}
+
+const { current: currentMtg, next: nextMtg } = getCurrentAndNextMeeting();
+const meetingKey = meetingKeyFor(currentMtg);
+
 const params = new URLSearchParams(location.search);
 const isTally = params.get('view') === 'tally';
 
 if (isTally) {
   document.getElementById('voter-view').classList.add('hide');
   document.getElementById('tally-view').classList.remove('hide');
+  document.getElementById('tally-title').firstChild.textContent =
+    'Vote Tally — ' + fmtDate(currentMtg) + ' ';
+  document.getElementById('tally-next').textContent =
+    nextMtg ? 'Next meeting: ' + fmtDate(nextMtg) : '';
   startTallyPolling();
   document.getElementById('reset-btn').addEventListener('click', resetMeeting);
 } else {
-  document.getElementById('vote-form').addEventListener('submit', submitVote);
+  document.getElementById('meeting-title').textContent =
+    'Meeting Agenda for ' + fmtDate(currentMtg);
+  document.getElementById('meeting-next').textContent =
+    nextMtg ? 'Next meeting: ' + fmtDate(nextMtg) : '';
+  document.querySelectorAll('.section-card').forEach(card => {
+    const btn = card.querySelector('button');
+    btn.addEventListener('click', () => submitSection(card));
+    card.querySelector('input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); submitSection(card); }
+    });
+  });
 }
 
-function showMsg(id, cls, text) {
-  const el = document.getElementById(id);
-  el.className = 'msg ' + cls;
-  el.textContent = text;
-  el.classList.remove('hide');
-}
-
-async function submitVote(e) {
-  e.preventDefault();
-  const form = e.target;
-  const btn = document.getElementById('submit-btn');
-  const data = {
-    speaker: form.speaker.value,
-    evaluator: form.evaluator.value,
-    tableTopics: form.tableTopics.value,
-  };
-  if (!data.speaker.trim() && !data.evaluator.trim() && !data.tableTopics.trim()) {
-    showMsg('voter-msg', 'msg-err', 'Enter at least one name.');
-    return;
-  }
+async function submitSection(card) {
+  if (card.querySelector('.section-done')) return;
+  const category = card.dataset.category;
+  const input = card.querySelector('input');
+  const btn = card.querySelector('button');
+  const raw = input.value.trim();
+  if (!raw) { input.focus(); return; }
   btn.disabled = true;
   btn.textContent = 'Submitting…';
+  removeSectionError(card);
   try {
     const res = await fetch('/api/vote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ meetingKey, [category]: raw }),
     });
     const result = await res.json();
     if (!res.ok) throw new Error(result.error || 'Vote failed');
-    form.innerHTML =
-      '<div class="msg msg-ok"><strong>Vote recorded — thanks!</strong><br>' +
-      '<span style="font-size:13px;color:#166534">You can refresh this page if you need to vote again.</span></div>';
+    const displayed = (result.results && result.results[category] && result.results[category].display) || raw;
+    const row = card.querySelector('.section-row');
+    const done = document.createElement('div');
+    done.className = 'section-done';
+    done.innerHTML = '&#10003; Voted for <strong>' + escapeHtml(displayed) + '</strong>';
+    row.replaceWith(done);
   } catch (err) {
-    showMsg('voter-msg', 'msg-err', err.message);
+    showSectionError(card, err.message);
     btn.disabled = false;
-    btn.textContent = 'Submit Vote';
+    btn.textContent = 'Submit';
   }
+}
+
+function showSectionError(card, msg) {
+  removeSectionError(card);
+  const err = document.createElement('div');
+  err.className = 'section-err';
+  err.textContent = msg;
+  card.appendChild(err);
+}
+function removeSectionError(card) {
+  const existing = card.querySelector('.section-err');
+  if (existing) existing.remove();
 }
 
 async function startTallyPolling() {
   const tick = async () => {
     try {
-      const res = await fetch('/api/tally');
+      const res = await fetch('/api/tally?meeting=' + encodeURIComponent(meetingKey));
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Load failed');
       renderTally(data);
@@ -201,21 +286,16 @@ async function startTallyPolling() {
 }
 
 function renderTally(data) {
-  const { meetingId, tallies } = data;
-  document.getElementById('tally-meta').textContent = meetingId
-    ? 'Meeting started ' + new Date(Number(meetingId)).toLocaleString()
-    : 'No active meeting yet.';
-
+  const tallies = data.tallies || {};
   const sections = [
     { key: 'speaker', label: 'Best Speaker' },
     { key: 'evaluator', label: 'Best Evaluator' },
     { key: 'tableTopics', label: 'Best Table Topics' },
   ];
-
   let html = '';
   for (const s of sections) {
     html += '<div class="tally-section"><h2>' + s.label + '</h2>';
-    const rows = (tallies && tallies[s.key]) || [];
+    const rows = tallies[s.key] || [];
     if (!rows.length) {
       html += '<div class="empty">No votes yet.</div>';
     } else {
@@ -238,19 +318,19 @@ function renderTally(data) {
 }
 
 async function resetMeeting() {
-  if (!confirm('Start a new voting round?\n\nThe current tally will be archived (still in the database) and everyone can vote again.')) return;
+  if (!confirm('Clear all votes for ' + fmtDate(currentMtg) + '?\n\nThis deletes votes for this meeting only. Other meetings\' votes are unaffected.')) return;
   const btn = document.getElementById('reset-btn');
   btn.disabled = true;
-  btn.textContent = 'Resetting…';
+  btn.textContent = 'Clearing…';
   try {
-    const res = await fetch('/api/reset', { method: 'POST' });
+    const res = await fetch('/api/reset?meeting=' + encodeURIComponent(meetingKey), { method: 'POST' });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Reset failed');
-    btn.textContent = 'Reset for Next Meeting';
+    btn.textContent = 'Clear votes for this meeting';
     btn.disabled = false;
   } catch (err) {
     alert(err.message);
-    btn.textContent = 'Reset for Next Meeting';
+    btn.textContent = 'Clear votes for this meeting';
     btn.disabled = false;
   }
 }
