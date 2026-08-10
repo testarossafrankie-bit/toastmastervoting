@@ -101,6 +101,47 @@ const NICKNAMES = {
   trudy: 'gertrude',
 };
 
+const KNOWN_NAMES = new Set([...Object.keys(NICKNAMES), ...Object.values(NICKNAMES)]);
+
+export function damerauLevenshtein(a, b) {
+  if (a === b) return 0;
+  const m = a.length, n = b.length;
+  if (Math.abs(m - n) > 2) return 99;
+  const d = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) d[i][0] = i;
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + cost
+      );
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
+    }
+  }
+  return d[m][n];
+}
+
+export function similarFirstnames(a, b, minLen = 3) {
+  if (a === b) return false;
+  if (a.length < minLen || b.length < minLen) return false;
+  if (a[0] !== b[0]) return false;
+  if (a[1] !== b[1]) return false;
+  return damerauLevenshtein(a, b) <= 1;
+}
+
+function fuzzyKnownName(name) {
+  if (name.length < 5) return null;
+  for (const candidate of KNOWN_NAMES) {
+    if (similarFirstnames(name, candidate, 5)) return candidate;
+  }
+  return null;
+}
+
 export function normalizeName(raw) {
   const cleaned = String(raw || '')
     .trim()
@@ -110,7 +151,13 @@ export function normalizeName(raw) {
     .trim();
   if (!cleaned) return null;
   const parts = cleaned.split(' ');
-  const first = NICKNAMES[parts[0]] || parts[0];
+  let first = parts[0];
+  if (NICKNAMES[first]) {
+    first = NICKNAMES[first];
+  } else if (!KNOWN_NAMES.has(first)) {
+    const fuzzy = fuzzyKnownName(first);
+    if (fuzzy) first = NICKNAMES[fuzzy] || fuzzy;
+  }
   const lastInitial = parts[1] ? parts[1][0] : '';
   const key = lastInitial ? `${first}-${lastInitial}` : first;
   return { key, first, lastInitial, raw: String(raw).trim() };
