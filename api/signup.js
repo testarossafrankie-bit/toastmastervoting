@@ -19,6 +19,7 @@ function parseEntry(val) {
 
 function sanitize(body) {
   return {
+    date: (body.date || '').trim().slice(0, 20),
     name: (body.name || '').trim().slice(0, 80),
     cell: (body.cell || '').trim().slice(0, 40),
     email: (body.email || '').trim().slice(0, 120),

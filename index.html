@@ -113,7 +113,7 @@
   .signup-header { text-align: center; margin: 0 0 2px; }
   .signup-header h1 { font-size: 20px; margin: 0; letter-spacing: 0.5px; }
   .signup-header .subhead { font-size: 14px; color: #666; font-weight: 500; margin-top: 2px; letter-spacing: 1px; }
-  .signup-grid { display: grid; grid-template-columns: 1.2fr 1fr 1.3fr 1fr auto; gap: 8px; align-items: center; }
+  .signup-grid { display: grid; grid-template-columns: 0.9fr 1.2fr 1fr 1.3fr 1fr auto; gap: 8px; align-items: center; }
   .signup-grid input { width: 100%; }
   .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
   .signup-grid .edit-btn,
@@ -306,6 +306,7 @@
 
     <div class="card">
       <div class="signup-grid" id="signup-head-row">
+        <div class="signup-head">Date</div>
         <div class="signup-head">Name</div>
         <div class="signup-head">Cell</div>
         <div class="signup-head">e-Mail</div>
@@ -314,6 +315,7 @@
       </div>
       <div id="signup-list"><div class="empty signup-empty">Loading&hellip;</div></div>
       <div class="signup-grid signup-input-row">
+        <input id="signup-date" type="date">
         <input id="signup-name" placeholder="Your name" autocomplete="name">
         <input id="signup-cell" placeholder="Cell" autocomplete="tel" inputmode="tel">
         <input id="signup-email" placeholder="e-Mail" autocomplete="email" inputmode="email">
@@ -440,8 +442,9 @@ if (isTally) {
 } else if (isSignup) {
   document.getElementById('voter-view').classList.add('hide');
   document.getElementById('signup-view').classList.remove('hide');
+  document.getElementById('signup-date').value = meetingKeyFor(new Date());
   document.getElementById('signup-submit').addEventListener('click', submitSignup);
-  ['signup-name', 'signup-cell', 'signup-email', 'signup-mentor'].forEach(id => {
+  ['signup-date', 'signup-name', 'signup-cell', 'signup-email', 'signup-mentor'].forEach(id => {
     document.getElementById(id).addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); submitSignup(); }
     });
@@ -575,12 +578,14 @@ let editingId = null;
 let signupCache = [];
 
 async function submitSignup() {
+  const dateEl = document.getElementById('signup-date');
   const nameEl = document.getElementById('signup-name');
   const cellEl = document.getElementById('signup-cell');
   const emailEl = document.getElementById('signup-email');
   const mentorEl = document.getElementById('signup-mentor');
   const errEl = document.getElementById('signup-err');
   const btn = document.getElementById('signup-submit');
+  const date = dateEl.value.trim();
   const name = nameEl.value.trim();
   const cell = cellEl.value.trim();
   const email = emailEl.value.trim();
@@ -594,7 +599,7 @@ async function submitSignup() {
     const res = await fetch('/api/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, cell, email, mentor }),
+      body: JSON.stringify({ date, name, cell, email, mentor }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Sign-up failed');
@@ -655,10 +660,18 @@ function renderSignups() {
   });
 }
 
+function fmtRowDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  if (!m) return iso || '';
+  const d = new Date(+m[1], +m[2] - 1, +m[3]);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+}
+
 function renderSignupRow(g) {
   if (editingId === g.id) {
     return (
       '<div class="signup-grid signup-row-wrap editing">' +
+        '<input class="edit-input" data-id="' + g.id + '" data-field="date" type="date" value="' + escapeHtml(g.date || '') + '">' +
         '<input class="edit-input" data-id="' + g.id + '" data-field="name" value="' + escapeHtml(g.name || '') + '" placeholder="Name">' +
         '<input class="edit-input" data-id="' + g.id + '" data-field="cell" value="' + escapeHtml(g.cell || '') + '" placeholder="Cell" inputmode="tel">' +
         '<input class="edit-input" data-id="' + g.id + '" data-field="email" value="' + escapeHtml(g.email || '') + '" placeholder="e-Mail" inputmode="email">' +
@@ -672,6 +685,7 @@ function renderSignupRow(g) {
   }
   return (
     '<div class="signup-grid signup-row-wrap">' +
+      '<div class="signup-cell">' + escapeHtml(fmtRowDate(g.date)) + '</div>' +
       '<div class="signup-cell">' + escapeHtml(g.name || '') + '</div>' +
       '<div class="signup-cell">' + escapeHtml(g.cell || '') + '</div>' +
       '<div class="signup-cell">' + escapeHtml(g.email || '') + '</div>' +
