@@ -167,6 +167,24 @@
   .banner a { color: inherit; text-decoration: underline; font-weight: 600; }
   .banner-vote { background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
   .banner-signup { background: #fef3c7; color: #78350f; border: 1px solid #fcd34d; }
+  .guest-callout {
+    margin-top: 10px;
+    padding: 14px 16px;
+    background: #dc2626;
+    color: white;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .guest-callout a {
+    color: white;
+    text-decoration: underline;
+    font-weight: 800;
+    display: inline-block;
+  }
+  .guest-callout a:hover { color: #fee2e2; }
   .pulse {
     display: inline-block;
     width: 8px; height: 8px;
@@ -190,7 +208,9 @@
     <div class="picker" id="voter-picker"></div>
     <div class="banner banner-vote">
       <strong>Members &mdash; vote here.</strong>
-      First-time guest? <a href="?view=signup">Sign in on the guest sheet &rarr;</a>
+      <div class="guest-callout">
+        First-time guest? <a href="?view=signup">Sign in on the guest sheet &rarr;</a>
+      </div>
     </div>
     <p class="sub">Enter <strong>first name + last initial</strong> (e.g., "Mike S") and submit each category individually.</p>
 
