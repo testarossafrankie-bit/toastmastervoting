@@ -127,7 +127,7 @@
   .signup-header { text-align: center; margin: 0 0 2px; }
   .signup-header h1 { font-size: 20px; margin: 0; letter-spacing: 0.5px; }
   .signup-header .subhead { font-size: 14px; color: #666; font-weight: 500; margin-top: 2px; letter-spacing: 1px; }
-  .signup-grid { display: grid; grid-template-columns: 0.9fr 1.2fr 1fr 1.3fr 1fr auto; gap: 8px; align-items: center; }
+  .signup-grid { display: grid; grid-template-columns: 0.9fr 1.2fr 1fr 1.3fr 1.2fr auto; gap: 8px; align-items: center; }
   .signup-grid input { width: 100%; }
   .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
   .signup-grid .edit-btn,
@@ -324,7 +324,7 @@
         <div class="signup-head">Name</div>
         <div class="signup-head">Cell</div>
         <div class="signup-head">e-Mail</div>
-        <div class="signup-head">Mentor</div>
+        <div class="signup-head">Where did you hear about us?</div>
         <div class="signup-head"></div>
       </div>
       <div id="signup-list"><div class="empty signup-empty">Loading&hellip;</div></div>
@@ -333,7 +333,7 @@
         <input id="signup-name" placeholder="Your name" autocomplete="name">
         <input id="signup-cell" placeholder="Cell" autocomplete="tel" inputmode="tel">
         <input id="signup-email" placeholder="e-Mail" autocomplete="email" inputmode="email">
-        <input id="signup-mentor" placeholder="Mentor" autocomplete="off">
+        <input id="signup-source" placeholder="How did you hear?" autocomplete="off">
         <button type="button" id="signup-submit">Sign Up</button>
       </div>
       <div class="section-err hide" id="signup-err"></div>
@@ -459,7 +459,7 @@ if (isTally) {
   document.getElementById('signup-view').classList.remove('hide');
   document.getElementById('signup-date').value = meetingKeyFor(new Date());
   document.getElementById('signup-submit').addEventListener('click', submitSignup);
-  ['signup-date', 'signup-name', 'signup-cell', 'signup-email', 'signup-mentor'].forEach(id => {
+  ['signup-date', 'signup-name', 'signup-cell', 'signup-email', 'signup-source'].forEach(id => {
     document.getElementById(id).addEventListener('keydown', e => {
       if (e.key === 'Enter') { e.preventDefault(); submitSignup(); }
     });
@@ -597,14 +597,14 @@ async function submitSignup() {
   const nameEl = document.getElementById('signup-name');
   const cellEl = document.getElementById('signup-cell');
   const emailEl = document.getElementById('signup-email');
-  const mentorEl = document.getElementById('signup-mentor');
+  const sourceEl = document.getElementById('signup-source');
   const errEl = document.getElementById('signup-err');
   const btn = document.getElementById('signup-submit');
   const date = dateEl.value.trim();
   const name = nameEl.value.trim();
   const cell = cellEl.value.trim();
   const email = emailEl.value.trim();
-  const mentor = mentorEl.value.trim();
+  const source = sourceEl.value.trim();
   errEl.classList.add('hide');
   errEl.textContent = '';
   if (!name) { nameEl.focus(); return; }
@@ -614,11 +614,11 @@ async function submitSignup() {
     const res = await fetch('/api/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date, name, cell, email, mentor }),
+      body: JSON.stringify({ date, name, cell, email, source }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Sign-up failed');
-    nameEl.value = ''; cellEl.value = ''; emailEl.value = ''; mentorEl.value = '';
+    nameEl.value = ''; cellEl.value = ''; emailEl.value = ''; sourceEl.value = '';
     nameEl.focus();
     loadSignups();
   } catch (err) {
@@ -690,7 +690,7 @@ function renderSignupRow(g) {
         '<input class="edit-input" data-id="' + g.id + '" data-field="name" value="' + escapeHtml(g.name || '') + '" placeholder="Name">' +
         '<input class="edit-input" data-id="' + g.id + '" data-field="cell" value="' + escapeHtml(g.cell || '') + '" placeholder="Cell" inputmode="tel">' +
         '<input class="edit-input" data-id="' + g.id + '" data-field="email" value="' + escapeHtml(g.email || '') + '" placeholder="e-Mail" inputmode="email">' +
-        '<input class="edit-input" data-id="' + g.id + '" data-field="mentor" value="' + escapeHtml(g.mentor || '') + '" placeholder="Mentor">' +
+        '<input class="edit-input" data-id="' + g.id + '" data-field="source" value="' + escapeHtml(g.source || '') + '" placeholder="How did you hear?">' +
         '<div class="row-actions">' +
           '<button class="save-btn" data-action="save" data-id="' + g.id + '" title="Save">&#10003;</button>' +
           '<button class="cancel-btn" data-action="cancel" data-id="' + g.id + '" title="Cancel">&times;</button>' +
@@ -704,7 +704,7 @@ function renderSignupRow(g) {
       '<div class="signup-cell">' + escapeHtml(g.name || '') + '</div>' +
       '<div class="signup-cell">' + escapeHtml(g.cell || '') + '</div>' +
       '<div class="signup-cell">' + escapeHtml(g.email || '') + '</div>' +
-      '<div class="signup-cell">' + escapeHtml(g.mentor || '') + '</div>' +
+      '<div class="signup-cell">' + escapeHtml(g.source || '') + '</div>' +
       '<div class="row-actions">' +
         '<button class="edit-btn" data-action="edit" data-id="' + g.id + '" title="Edit">&#9998;</button>' +
         '<button class="delete-btn" data-action="delete" data-id="' + g.id + '" title="Remove">&times;</button>' +
