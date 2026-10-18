@@ -5,60 +5,69 @@ const redis = new Redis({
   token: process.env.KV_REST_API_TOKEN,
 });
 
-function guestsKey(meetingKey) {
-  return `ttv:m:${meetingKey}:guests`;
+const GUESTS_KEY = 'ttv:guests';
+
+function makeId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
-function validMeetingKey(s) {
-  return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+function parseEntry(val) {
+  if (val == null) return null;
+  if (typeof val === 'object') return val;
+  try { return JSON.parse(val); } catch { return null; }
+}
+
+function sanitize(body) {
+  return {
+    name: (body.name || '').trim().slice(0, 80),
+    cell: (body.cell || '').trim().slice(0, 40),
+    email: (body.email || '').trim().slice(0, 120),
+    mentor: (body.mentor || '').trim().slice(0, 80),
+  };
 }
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
-    const meetingKey = req.query.meeting;
-    if (!validMeetingKey(meetingKey)) {
-      return res.status(400).json({ error: 'Missing or invalid ?meeting=YYYY-MM-DD' });
-    }
-    const raw = await redis.lrange(guestsKey(meetingKey), 0, -1);
-    const guests = raw.map(entry => {
-      if (typeof entry === 'object' && entry !== null) return entry;
-      try { return JSON.parse(entry); } catch { return null; }
-    }).filter(Boolean);
-    return res.status(200).json({ ok: true, meetingKey, guests });
+    const raw = (await redis.hgetall(GUESTS_KEY)) || {};
+    const guests = Object.entries(raw)
+      .map(([id, val]) => {
+        const parsed = parseEntry(val);
+        return parsed ? { id, ...parsed } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    return res.status(200).json({ ok: true, guests });
   }
 
+  const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+
   if (req.method === 'POST') {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
-    const meetingKey = body.meetingKey;
-    if (!validMeetingKey(meetingKey)) {
-      return res.status(400).json({ error: 'Missing or invalid meetingKey (expected YYYY-MM-DD)' });
-    }
-    const name = (body.name || '').trim().slice(0, 80);
-    const cell = (body.cell || '').trim().slice(0, 40);
-    const email = (body.email || '').trim().slice(0, 120);
-    const mentor = (body.mentor || '').trim().slice(0, 80);
-    if (!name) {
-      return res.status(400).json({ error: 'Name is required' });
-    }
-    const entry = { name, cell, email, mentor, ts: Date.now() };
-    await redis.rpush(guestsKey(meetingKey), JSON.stringify(entry));
-    return res.status(200).json({ ok: true, meetingKey, guest: entry });
+    const fields = sanitize(body);
+    if (!fields.name) return res.status(400).json({ error: 'Name is required' });
+    const id = makeId();
+    const entry = { ...fields, ts: Date.now() };
+    await redis.hset(GUESTS_KEY, { [id]: JSON.stringify(entry) });
+    return res.status(200).json({ ok: true, guest: { id, ...entry } });
+  }
+
+  if (req.method === 'PATCH' || req.method === 'PUT') {
+    const id = (body.id || '').toString();
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const existing = parseEntry(await redis.hget(GUESTS_KEY, id));
+    if (!existing) return res.status(404).json({ error: 'Not found' });
+    const fields = sanitize(body);
+    if (!fields.name) return res.status(400).json({ error: 'Name is required' });
+    const updated = { ...existing, ...fields };
+    await redis.hset(GUESTS_KEY, { [id]: JSON.stringify(updated) });
+    return res.status(200).json({ ok: true, guest: { id, ...updated } });
   }
 
   if (req.method === 'DELETE') {
-    const meetingKey = req.query.meeting;
-    if (!validMeetingKey(meetingKey)) {
-      return res.status(400).json({ error: 'Missing or invalid ?meeting=YYYY-MM-DD' });
-    }
-    const idx = Number(req.query.index);
-    if (!Number.isInteger(idx) || idx < 0) {
-      return res.status(400).json({ error: 'Missing or invalid ?index' });
-    }
-    const sentinel = '__TTV_DELETED__';
-    await redis.lset(guestsKey(meetingKey), idx, sentinel);
-    await redis.lrem(guestsKey(meetingKey), 1, sentinel);
-    return res.status(200).json({ ok: true, meetingKey, index: idx });
+    const id = req.query.id;
+    if (!id) return res.status(400).json({ error: 'id required' });
+    await redis.hdel(GUESTS_KEY, id);
+    return res.status(200).json({ ok: true, id });
   }
 
-  return res.status(405).json({ error: 'GET, POST, or DELETE only' });
+  return res.status(405).json({ error: 'GET, POST, PATCH, or DELETE only' });
 }

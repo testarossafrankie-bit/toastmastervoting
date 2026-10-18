@@ -115,16 +115,36 @@
   .signup-header .subhead { font-size: 14px; color: #666; font-weight: 500; margin-top: 2px; letter-spacing: 1px; }
   .signup-grid { display: grid; grid-template-columns: 1.2fr 1fr 1.3fr 1fr auto; gap: 8px; align-items: center; }
   .signup-grid input { width: 100%; }
-  .signup-grid .delete-btn {
+  .row-actions { display: flex; gap: 4px; justify-content: flex-end; }
+  .signup-grid .edit-btn,
+  .signup-grid .delete-btn,
+  .signup-grid .save-btn,
+  .signup-grid .cancel-btn {
     background: transparent;
-    color: #dc2626;
     border: none;
     padding: 6px 8px;
-    font-size: 18px;
+    font-size: 16px;
     cursor: pointer;
     line-height: 1;
+    border-radius: 6px;
   }
-  .signup-grid .delete-btn:hover { background: #fee2e2; border-radius: 6px; }
+  .signup-grid .edit-btn { color: #2563eb; }
+  .signup-grid .edit-btn:hover { background: #eff6ff; }
+  .signup-grid .delete-btn { color: #dc2626; font-size: 18px; }
+  .signup-grid .delete-btn:hover { background: #fee2e2; }
+  .signup-grid .save-btn { color: #15803d; font-size: 18px; font-weight: 700; }
+  .signup-grid .save-btn:hover { background: #dcfce7; }
+  .signup-grid .cancel-btn { color: #6b7280; font-size: 18px; }
+  .signup-grid .cancel-btn:hover { background: #f3f4f6; }
+  .signup-row-wrap.editing { background: #fffbeb; border-radius: 6px; padding: 6px 4px; margin: 2px 0; }
+  .edit-input {
+    padding: 8px 10px;
+    font-size: 14px;
+    border: 1px solid #d0d5dc;
+    border-radius: 6px;
+    width: 100%;
+    min-width: 0;
+  }
   .signup-head {
     font-size: 12px;
     text-transform: uppercase;
@@ -185,6 +205,22 @@
     display: inline-block;
   }
   .guest-callout a:hover { color: #fee2e2; }
+  .results-cta {
+    margin-top: 20px;
+    text-align: center;
+  }
+  .results-cta a {
+    display: inline-block;
+    padding: 14px 28px;
+    background: #2563eb;
+    color: white;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 2px 6px rgba(37,99,235,0.35);
+  }
+  .results-cta a:hover { background: #1d4ed8; }
   .pulse {
     display: inline-block;
     width: 8px; height: 8px;
@@ -209,7 +245,7 @@
     <div class="banner banner-vote">
       <strong>Members &mdash; vote here.</strong>
       <div class="guest-callout">
-        First-time guest? <a href="?view=signup">Sign in on the guest sheet &rarr;</a>
+        First-time guest? <a href="?view=signup">Sign up on the guest sheet &rarr;</a>
       </div>
     </div>
     <p class="sub">Enter <strong>first name + last initial</strong> (e.g., "Mike S") and submit each category individually.</p>
@@ -238,9 +274,11 @@
       </div>
     </div>
 
+    <div class="results-cta">
+      <a href="?view=tally">View Results &rarr;</a>
+    </div>
     <div class="view-toggle">
-      <a href="?view=tally">View live tally &rarr;</a>
-      <a href="?view=signup">Guest sign-in sheet &rarr;</a>
+      <a href="?view=signup">Guest sign-up sheet &rarr;</a>
     </div>
   </div>
 
@@ -251,7 +289,7 @@
     <div class="card" id="tally-content">Loading&hellip;</div>
     <div class="actions">
       <button class="btn-secondary" onclick="location.href='/'">&larr; Back to voting</button>
-      <button class="btn-secondary" onclick="location.href='?view=signup'">Guest sign-in &rarr;</button>
+      <button class="btn-secondary" onclick="location.href='?view=signup'">Guest sign-up &rarr;</button>
       <button class="btn-danger" id="reset-btn">Clear votes for this meeting</button>
     </div>
   </div>
@@ -259,12 +297,10 @@
   <div id="signup-view" class="hide">
     <div class="signup-header">
       <h1>DOYLESTOWN TOASTMASTERS CLUB</h1>
-      <div class="subhead">GUEST SIGN IN</div>
+      <div class="subhead">GUEST SIGN UP</div>
     </div>
-    <div class="meeting-next" id="signup-date" style="text-align:center; margin-top:8px;"></div>
-    <div class="picker" id="signup-picker"></div>
     <div class="banner banner-signup">
-      <strong>New guests &mdash; sign in here.</strong>
+      <strong>New guests &mdash; sign up here.</strong>
       Already a member? <a href="/">Head to the voting page &rarr;</a>
     </div>
 
@@ -282,14 +318,14 @@
         <input id="signup-cell" placeholder="Cell" autocomplete="tel" inputmode="tel">
         <input id="signup-email" placeholder="e-Mail" autocomplete="email" inputmode="email">
         <input id="signup-mentor" placeholder="Mentor" autocomplete="off">
-        <button type="button" id="signup-submit">Sign In</button>
+        <button type="button" id="signup-submit">Sign Up</button>
       </div>
       <div class="section-err hide" id="signup-err"></div>
     </div>
 
     <div class="view-toggle">
       <a href="/">&larr; Back to voting</a>
-      <a href="?view=tally">View live tally &rarr;</a>
+      <a href="?view=tally">View Results &rarr;</a>
     </div>
   </div>
 </main>
@@ -404,8 +440,6 @@ if (isTally) {
 } else if (isSignup) {
   document.getElementById('voter-view').classList.add('hide');
   document.getElementById('signup-view').classList.remove('hide');
-  document.getElementById('signup-date').textContent = 'Date: ' + fmtDate(currentMtg);
-  renderPicker('signup-picker', currentMtg);
   document.getElementById('signup-submit').addEventListener('click', submitSignup);
   ['signup-name', 'signup-cell', 'signup-email', 'signup-mentor'].forEach(id => {
     document.getElementById(id).addEventListener('keydown', e => {
@@ -537,6 +571,9 @@ async function resetMeeting() {
   }
 }
 
+let editingId = null;
+let signupCache = [];
+
 async function submitSignup() {
   const nameEl = document.getElementById('signup-name');
   const cellEl = document.getElementById('signup-cell');
@@ -552,15 +589,15 @@ async function submitSignup() {
   errEl.textContent = '';
   if (!name) { nameEl.focus(); return; }
   btn.disabled = true;
-  btn.textContent = 'Signing in…';
+  btn.textContent = 'Signing up…';
   try {
     const res = await fetch('/api/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ meetingKey, name, cell, email, mentor }),
+      body: JSON.stringify({ name, cell, email, mentor }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Sign-in failed');
+    if (!res.ok) throw new Error(data.error || 'Sign-up failed');
     nameEl.value = ''; cellEl.value = ''; emailEl.value = ''; mentorEl.value = '';
     nameEl.focus();
     loadSignups();
@@ -569,16 +606,17 @@ async function submitSignup() {
     errEl.classList.remove('hide');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Sign In';
+    btn.textContent = 'Sign Up';
   }
 }
 
 async function loadSignups() {
   try {
-    const res = await fetch('/api/signup?meeting=' + encodeURIComponent(meetingKey));
+    const res = await fetch('/api/signup');
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Load failed');
-    renderSignups(data.guests || []);
+    signupCache = data.guests || [];
+    renderSignups();
   } catch (err) {
     document.getElementById('signup-list').innerHTML =
       '<div class="msg msg-err">' + escapeHtml(err.message) + '</div>';
@@ -587,36 +625,99 @@ async function loadSignups() {
 
 function startSignupPolling() {
   loadSignups();
-  setInterval(loadSignups, 3000);
+  setInterval(() => { if (!editingId) loadSignups(); }, 3000);
 }
 
-function renderSignups(guests) {
+function renderSignups() {
   const list = document.getElementById('signup-list');
-  if (!guests.length) {
-    list.innerHTML = '<div class="empty">No guests signed in yet.</div>';
+  if (!signupCache.length) {
+    list.innerHTML = '<div class="empty signup-empty">No guests signed up yet.</div>';
     return;
   }
-  list.innerHTML = guests.map((g, i) =>
+  list.innerHTML = signupCache.map(g => renderSignupRow(g)).join('');
+  list.querySelectorAll('[data-action="edit"]').forEach(btn => {
+    btn.addEventListener('click', () => beginEdit(btn.dataset.id));
+  });
+  list.querySelectorAll('[data-action="delete"]').forEach(btn => {
+    btn.addEventListener('click', () => deleteSignup(btn.dataset.id, btn));
+  });
+  list.querySelectorAll('[data-action="save"]').forEach(btn => {
+    btn.addEventListener('click', () => saveEdit(btn.dataset.id));
+  });
+  list.querySelectorAll('[data-action="cancel"]').forEach(btn => {
+    btn.addEventListener('click', () => { editingId = null; renderSignups(); });
+  });
+  list.querySelectorAll('.edit-input').forEach(inp => {
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); saveEdit(inp.dataset.id); }
+      if (e.key === 'Escape') { editingId = null; renderSignups(); }
+    });
+  });
+}
+
+function renderSignupRow(g) {
+  if (editingId === g.id) {
+    return (
+      '<div class="signup-grid signup-row-wrap editing">' +
+        '<input class="edit-input" data-id="' + g.id + '" data-field="name" value="' + escapeHtml(g.name || '') + '" placeholder="Name">' +
+        '<input class="edit-input" data-id="' + g.id + '" data-field="cell" value="' + escapeHtml(g.cell || '') + '" placeholder="Cell" inputmode="tel">' +
+        '<input class="edit-input" data-id="' + g.id + '" data-field="email" value="' + escapeHtml(g.email || '') + '" placeholder="e-Mail" inputmode="email">' +
+        '<input class="edit-input" data-id="' + g.id + '" data-field="mentor" value="' + escapeHtml(g.mentor || '') + '" placeholder="Mentor">' +
+        '<div class="row-actions">' +
+          '<button class="save-btn" data-action="save" data-id="' + g.id + '" title="Save">&#10003;</button>' +
+          '<button class="cancel-btn" data-action="cancel" data-id="' + g.id + '" title="Cancel">&times;</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+  return (
     '<div class="signup-grid signup-row-wrap">' +
       '<div class="signup-cell">' + escapeHtml(g.name || '') + '</div>' +
       '<div class="signup-cell">' + escapeHtml(g.cell || '') + '</div>' +
       '<div class="signup-cell">' + escapeHtml(g.email || '') + '</div>' +
       '<div class="signup-cell">' + escapeHtml(g.mentor || '') + '</div>' +
-      '<button class="delete-btn" title="Remove" data-idx="' + i + '">&times;</button>' +
+      '<div class="row-actions">' +
+        '<button class="edit-btn" data-action="edit" data-id="' + g.id + '" title="Edit">&#9998;</button>' +
+        '<button class="delete-btn" data-action="delete" data-id="' + g.id + '" title="Remove">&times;</button>' +
+      '</div>' +
     '</div>'
-  ).join('');
-  list.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', () => deleteSignup(Number(btn.dataset.idx), btn));
-  });
+  );
 }
 
-async function deleteSignup(index, btn) {
-  if (!confirm('Remove this sign-in?')) return;
+function beginEdit(id) {
+  editingId = id;
+  renderSignups();
+  const list = document.getElementById('signup-list');
+  const first = list.querySelector('.edit-input[data-field="name"]');
+  if (first) first.focus();
+}
+
+async function saveEdit(id) {
+  const list = document.getElementById('signup-list');
+  const inputs = list.querySelectorAll('.edit-input[data-id="' + id + '"]');
+  const payload = { id };
+  inputs.forEach(inp => { payload[inp.dataset.field] = inp.value.trim(); });
+  if (!payload.name) { inputs[0].focus(); return; }
+  try {
+    const res = await fetch('/api/signup', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Save failed');
+    editingId = null;
+    loadSignups();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function deleteSignup(id, btn) {
+  if (!confirm('Remove this sign-up?')) return;
   btn.disabled = true;
   try {
-    const res = await fetch('/api/signup?meeting=' + encodeURIComponent(meetingKey) + '&index=' + index, {
-      method: 'DELETE',
-    });
+    const res = await fetch('/api/signup?id=' + encodeURIComponent(id), { method: 'DELETE' });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Delete failed');
     loadSignups();
