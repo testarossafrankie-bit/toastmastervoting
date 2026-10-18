@@ -136,12 +136,23 @@
   }
   .signup-cell { padding: 10px 2px; border-bottom: 1px solid #f1f3f5; font-size: 14px; word-break: break-word; }
   .signup-cell.num { color: #999; font-variant-numeric: tabular-nums; }
+  .signup-input-row { padding-top: 10px; align-items: center; }
+  .signup-input-row input { padding: 10px 12px; font-size: 15px; }
+  .signup-input-row button { padding: 10px 14px; font-size: 14px; }
+  .signup-empty { padding: 14px 2px; }
   @media (max-width: 520px) {
     .signup-grid { grid-template-columns: 1fr; gap: 4px; }
     .signup-grid .signup-head { display: none; }
     .signup-cell { border-bottom: none; padding: 2px; }
     .signup-row-wrap { padding: 10px 0; border-bottom: 1px solid #f1f3f5; }
     .signup-row-wrap .signup-grid { grid-template-columns: 1fr auto; }
+    .signup-input-row {
+      grid-template-columns: 1fr !important;
+      border-top: 2px solid #e5e7eb;
+      padding-top: 14px;
+      margin-top: 8px;
+    }
+    .signup-input-row button { width: 100%; }
   }
   footer { text-align: center; font-size: 12px; color: #888; padding: 24px 16px; }
   .hide { display: none; }
@@ -237,18 +248,6 @@
       Already a member? <a href="/">Head to the voting page &rarr;</a>
     </div>
 
-    <div class="section-card">
-      <h3>Add your info</h3>
-      <div class="signup-grid" style="margin-bottom:10px;">
-        <input id="signup-name" placeholder="Name" autocomplete="name">
-        <input id="signup-cell" placeholder="Cell" autocomplete="tel" inputmode="tel">
-        <input id="signup-email" placeholder="e-Mail" autocomplete="email" inputmode="email">
-        <input id="signup-mentor" placeholder="Mentor" autocomplete="off">
-        <button type="button" id="signup-submit">Sign In</button>
-      </div>
-      <div class="section-err hide" id="signup-err"></div>
-    </div>
-
     <div class="card">
       <div class="signup-grid" id="signup-head-row">
         <div class="signup-head">Name</div>
@@ -257,7 +256,15 @@
         <div class="signup-head">Mentor</div>
         <div class="signup-head"></div>
       </div>
-      <div id="signup-list"><div class="empty">Loading&hellip;</div></div>
+      <div id="signup-list"><div class="empty signup-empty">Loading&hellip;</div></div>
+      <div class="signup-grid signup-input-row">
+        <input id="signup-name" placeholder="Your name" autocomplete="name">
+        <input id="signup-cell" placeholder="Cell" autocomplete="tel" inputmode="tel">
+        <input id="signup-email" placeholder="e-Mail" autocomplete="email" inputmode="email">
+        <input id="signup-mentor" placeholder="Mentor" autocomplete="off">
+        <button type="button" id="signup-submit">Sign In</button>
+      </div>
+      <div class="section-err hide" id="signup-err"></div>
     </div>
 
     <div class="view-toggle">
