@@ -150,6 +150,45 @@
   .signup-grid .save-btn:hover { background: #dcfce7; }
   .signup-grid .cancel-btn { color: #6b7280; font-size: 18px; }
   .signup-grid .cancel-btn:hover { background: #f3f4f6; }
+  .signup-grid .onboard-btn,
+  .signup-grid .unboard-btn {
+    background: transparent;
+    border: 1px solid #d0d5dc;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 999px;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+  .signup-grid .onboard-btn { color: #15803d; border-color: #86efac; }
+  .signup-grid .onboard-btn:hover { background: #dcfce7; }
+  .signup-grid .unboard-btn { color: #6b7280; }
+  .signup-grid .unboard-btn:hover { background: #f3f4f6; }
+  .signup-tabs { display: flex; gap: 8px; margin: 0 0 12px; flex-wrap: wrap; }
+  .signup-tabs button {
+    background: white;
+    color: #2563eb;
+    border: 1px solid #d0d5dc;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .signup-tabs button:hover { background: #eff6ff; }
+  .signup-tabs button.active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+  }
+  .signup-tabs .tab-count {
+    display: inline-block;
+    margin-left: 4px;
+    font-weight: 500;
+    opacity: 0.85;
+  }
   .signup-row-wrap.editing { background: #fffbeb; border-radius: 6px; padding: 6px 4px; margin: 2px 0; }
   .edit-input {
     padding: 8px 10px;
@@ -340,6 +379,11 @@
       Already a member? <a href="/">Head to the voting page &rarr;</a>
     </div>
 
+    <div class="signup-tabs">
+      <button type="button" data-tab="new" class="active">New Guests <span class="tab-count" id="tab-count-new">(0)</span></button>
+      <button type="button" data-tab="onboarded">Onboarded <span class="tab-count" id="tab-count-onboarded">(0)</span></button>
+    </div>
+
     <div class="card">
       <div class="signup-grid" id="signup-head-row">
         <div class="signup-head">Date</div>
@@ -350,7 +394,7 @@
         <div class="signup-head"></div>
       </div>
       <div id="signup-list"><div class="empty signup-empty">Loading&hellip;</div></div>
-      <div class="signup-grid signup-input-row">
+      <div class="signup-grid signup-input-row" id="signup-input-row">
         <input id="signup-date" type="date">
         <input id="signup-name" placeholder="Your name" autocomplete="name">
         <input id="signup-cell" placeholder="Cell" autocomplete="tel" inputmode="tel">
@@ -486,6 +530,9 @@ if (isTally) {
       if (e.key === 'Enter') { e.preventDefault(); submitSignup(); }
     });
   });
+  document.querySelectorAll('.signup-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => setActiveTab(btn.dataset.tab));
+  });
   startSignupPolling();
 } else {
   document.getElementById('meeting-title').textContent =
@@ -613,6 +660,18 @@ async function resetMeeting() {
 
 let editingId = null;
 let signupCache = [];
+let activeTab = 'new';
+
+function setActiveTab(tab) {
+  if (tab !== 'new' && tab !== 'onboarded') return;
+  activeTab = tab;
+  editingId = null;
+  document.querySelectorAll('.signup-tabs button').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.getElementById('signup-input-row').classList.toggle('hide', tab !== 'new');
+  renderSignups();
+}
 
 async function submitSignup() {
   const dateEl = document.getElementById('signup-date');
@@ -672,11 +731,19 @@ function startSignupPolling() {
 
 function renderSignups() {
   const list = document.getElementById('signup-list');
-  if (!signupCache.length) {
-    list.innerHTML = '<div class="empty signup-empty">No guests signed up yet.</div>';
+  const newCount = signupCache.filter(g => !g.onboarded).length;
+  const onboardedCount = signupCache.length - newCount;
+  const nc = document.getElementById('tab-count-new');
+  const oc = document.getElementById('tab-count-onboarded');
+  if (nc) nc.textContent = '(' + newCount + ')';
+  if (oc) oc.textContent = '(' + onboardedCount + ')';
+  const filtered = signupCache.filter(g => (activeTab === 'onboarded') === !!g.onboarded);
+  if (!filtered.length) {
+    const msg = activeTab === 'onboarded' ? 'No one onboarded yet.' : 'No guests signed up yet.';
+    list.innerHTML = '<div class="empty signup-empty">' + msg + '</div>';
     return;
   }
-  list.innerHTML = signupCache.map(g => renderSignupRow(g)).join('');
+  list.innerHTML = filtered.map(g => renderSignupRow(g)).join('');
   list.querySelectorAll('[data-action="edit"]').forEach(btn => {
     btn.addEventListener('click', () => beginEdit(btn.dataset.id));
   });
@@ -688,6 +755,12 @@ function renderSignups() {
   });
   list.querySelectorAll('[data-action="cancel"]').forEach(btn => {
     btn.addEventListener('click', () => { editingId = null; renderSignups(); });
+  });
+  list.querySelectorAll('[data-action="onboard"]').forEach(btn => {
+    btn.addEventListener('click', () => setOnboarded(btn.dataset.id, true, btn));
+  });
+  list.querySelectorAll('[data-action="unboard"]').forEach(btn => {
+    btn.addEventListener('click', () => setOnboarded(btn.dataset.id, false, btn));
   });
   list.querySelectorAll('.edit-input').forEach(inp => {
     inp.addEventListener('keydown', e => {
@@ -720,6 +793,9 @@ function renderSignupRow(g) {
       '</div>'
     );
   }
+  const moveBtn = g.onboarded
+    ? '<button class="unboard-btn" data-action="unboard" data-id="' + g.id + '" title="Move back to New Guests">&larr; Undo</button>'
+    : '<button class="onboard-btn" data-action="onboard" data-id="' + g.id + '" title="Mark as onboarded">Onboard &rarr;</button>';
   return (
     '<div class="signup-grid signup-row-wrap">' +
       '<div class="signup-cell">' + escapeHtml(fmtRowDate(g.date)) + '</div>' +
@@ -728,11 +804,29 @@ function renderSignupRow(g) {
       '<div class="signup-cell">' + escapeHtml(g.email || '') + '</div>' +
       '<div class="signup-cell">' + escapeHtml(g.source || '') + '</div>' +
       '<div class="row-actions">' +
+        moveBtn +
         '<button class="edit-btn" data-action="edit" data-id="' + g.id + '" title="Edit">&#9998;</button>' +
         '<button class="delete-btn" data-action="delete" data-id="' + g.id + '" title="Remove">&times;</button>' +
       '</div>' +
     '</div>'
   );
+}
+
+async function setOnboarded(id, flag, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch('/api/signup', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, onboarded: flag }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Update failed');
+    loadSignups();
+  } catch (err) {
+    alert(err.message);
+    if (btn) btn.disabled = false;
+  }
 }
 
 function beginEdit(id) {

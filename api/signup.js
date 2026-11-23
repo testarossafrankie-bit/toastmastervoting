@@ -17,14 +17,38 @@ function parseEntry(val) {
   try { return JSON.parse(val); } catch { return null; }
 }
 
-function sanitize(body) {
-  return {
-    date: (body.date || '').trim().slice(0, 20),
-    name: (body.name || '').trim().slice(0, 80),
-    cell: (body.cell || '').trim().slice(0, 40),
-    email: (body.email || '').trim().slice(0, 120),
-    source: (body.source || '').trim().slice(0, 120),
-  };
+const STR_FIELDS = {
+  date: 20,
+  name: 80,
+  cell: 40,
+  email: 120,
+  source: 120,
+};
+
+function sanitizeFull(body) {
+  const out = {};
+  for (const [field, max] of Object.entries(STR_FIELDS)) {
+    out[field] = (body[field] || '').trim().slice(0, max);
+  }
+  if (Object.prototype.hasOwnProperty.call(body, 'onboarded')) {
+    out.onboarded = !!body.onboarded;
+    out.onboardedTs = out.onboarded ? Date.now() : null;
+  }
+  return out;
+}
+
+function sanitizePartial(body) {
+  const out = {};
+  for (const [field, max] of Object.entries(STR_FIELDS)) {
+    if (Object.prototype.hasOwnProperty.call(body, field)) {
+      out[field] = (body[field] || '').trim().slice(0, max);
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(body, 'onboarded')) {
+    out.onboarded = !!body.onboarded;
+    out.onboardedTs = out.onboarded ? Date.now() : null;
+  }
+  return out;
 }
 
 export default async function handler(req, res) {
@@ -43,7 +67,7 @@ export default async function handler(req, res) {
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
 
   if (req.method === 'POST') {
-    const fields = sanitize(body);
+    const fields = sanitizeFull(body);
     if (!fields.name) return res.status(400).json({ error: 'Name is required' });
     const id = makeId();
     const entry = { ...fields, ts: Date.now() };
@@ -56,8 +80,10 @@ export default async function handler(req, res) {
     if (!id) return res.status(400).json({ error: 'id required' });
     const existing = parseEntry(await redis.hget(GUESTS_KEY, id));
     if (!existing) return res.status(404).json({ error: 'Not found' });
-    const fields = sanitize(body);
-    if (!fields.name) return res.status(400).json({ error: 'Name is required' });
+    const fields = sanitizePartial(body);
+    if (Object.prototype.hasOwnProperty.call(fields, 'name') && !fields.name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
     const updated = { ...existing, ...fields };
     await redis.hset(GUESTS_KEY, { [id]: JSON.stringify(updated) });
     return res.status(200).json({ ok: true, guest: { id, ...updated } });
