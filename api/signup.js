@@ -49,7 +49,7 @@ async function sendWelcomeEmail({ to, guestName }) {
     return { skipped: true };
   }
   const nextMtg = nextMeetingDate();
-  const nextLine = nextMtg ? `${fmtMeetingDate(nextMtg)} at 6:30 PM` : 'the next scheduled meeting';
+  const nextLine = nextMtg ? `${fmtMeetingDate(nextMtg)} at 6:00 PM` : 'the next scheduled meeting';
   const greet = firstName(guestName) || 'there';
 
   const text = `Hi ${greet} — Greetings!
@@ -64,11 +64,11 @@ Here's how our meetings usually run:
 
 I find the Doylestown club to be great for personal and professional development — and importantly, a fun, diverse, and welcoming group.
 
-We meet on the 2nd and 4th Tuesdays of each month at 6:30 PM at Poco's Mexican-American Restaurant, Bar & Comedy Cabaret — upstairs in the comedy club.
+We meet on the 2nd and 4th Tuesdays of each month at 6:00 PM at Poco's Mexican-American Restaurant, Bar & Comedy Cabaret — upstairs in the comedy club.
 
 OUR NEXT MEETING IS: ${nextLine}
 625 N Main St, Doylestown, PA 18901
-Arrive by 6:30 for sign-in.
+Arrive by 6:00 for sign-in.
 
 Toastmasters is the safest place on earth to learn how to speak in front of people. Statistically, people fear public speaking worse than death — but here, everyone wants to encourage you. Next time, it might be their turn, and they'll want your support.
 
@@ -92,10 +92,10 @@ Frank Terragrossa
   <li>Feedback and closing</li>
 </ul>
 <p>I find the Doylestown club to be great for personal and professional development &mdash; and importantly, a fun, diverse, and welcoming group.</p>
-<p>We meet on the <strong>2nd and 4th Tuesdays of each month at 6:30 PM</strong> at Poco's Mexican-American Restaurant, Bar &amp; Comedy Cabaret &mdash; upstairs in the comedy club.</p>
+<p>We meet on the <strong>2nd and 4th Tuesdays of each month at 6:00 PM</strong> at Poco's Mexican-American Restaurant, Bar &amp; Comedy Cabaret &mdash; upstairs in the comedy club.</p>
 <p><strong>OUR NEXT MEETING IS:</strong> ${escapeHtml(nextLine)}<br>
 625 N Main St, Doylestown, PA 18901<br>
-Arrive by 6:30 for sign-in.</p>
+Arrive by 6:00 for sign-in.</p>
 <p>Toastmasters is the safest place on earth to learn how to speak in front of people. Statistically, people fear public speaking worse than death &mdash; but here, everyone wants to encourage you. Next time, it might be their turn, and they'll want your support.</p>
 <p>Members develop their speeches using the TM Global online training courses and tools:<br>
 <a href="https://youtu.be/iv9cKPn0Wpo">https://youtu.be/iv9cKPn0Wpo</a><br>
